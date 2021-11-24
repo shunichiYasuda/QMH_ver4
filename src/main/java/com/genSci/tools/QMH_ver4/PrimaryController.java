@@ -167,9 +167,10 @@ public class PrimaryController {
 		}
 		if (selected.equals(itemArray[3])) {
 			tableToNum();
-			//System.out.println("3 : selected.");
+			// System.out.println("3 : selected.");
 		}
 	}
+
 	//
 	private void translateToMulti() {
 		// <Q> </Q> で問題ごとに区切られていることを前提
@@ -334,83 +335,90 @@ public class PrimaryController {
 			// 数値問題入力において<s:...>が存在したら、それは「選択肢から番号を選んで入力」を意味する。
 			// そのときは<table>をつくるのでフラグが必要
 			boolean tableFlag = false;
-			while (m.find()) { // <s:...>で終わる小問ごとの処理
-				// ここへ来たと言うことは<s:...>があったということ
-				tableFlag = true;
-				String str = m.group();
-				// str は<s:...>までの文字列
-				//System.out.println("最初のstr:" + str);
-				
-				String originalStr = new String(str);
-				//実験。<q:...>を取り出して配列にしまい込む。
-				List <String> qArray = new ArrayList<String>();
-				Pattern p_q = Pattern.compile("<q:(.+?)>");
-				Matcher m_q = p_q.matcher(str);
-				while(m_q.find()) {
-					qArray.add(m_q.group(1));
-				}
-				for(String s : qArray) {
-					System.out.println(s);
-				}
-				//<d:...> ダミーを探して中味を qArrayに付け足す。
-				Pattern p_d = Pattern.compile("<d:(.+?)>");
-				Matcher m_d = p_d.matcher(str);
-				while(m_d.find()) {
-					String dummy = m_d.group(1);
-					System.out.println("dummy:"+dummy);
-					String[] dummyArray = dummy.split(",");
-					for(String s:dummyArray) {
+			boolean sFlag = false;
+			if (m.find()) {
+				System.out.println("<s:...>がある");
+				sFlag = true;
+			} else {
+				System.out.println("<s:...>がない");
+			}
+			if (sFlag) {
+				m = p.matcher(target);
+				while (m.find()) { // <s:...>で終わる小問ごとの処理
+					// ここへ来たと言うことは<s:...>があったということ
+					tableFlag = true;
+					String str = m.group();
+					// str は<s:...>までの文字列
+					String originalStr = new String(str);
+					System.out.println("最初のstr");
+					System.out.println(str);
+					// 実験。<q:...>を取り出して配列にしまい込む。
+					List<String> qArray = new ArrayList<String>();
+					Pattern p_q = Pattern.compile("<q:(.+?)>");
+					Matcher m_q = p_q.matcher(str);
+					while (m_q.find()) {
+						qArray.add(m_q.group(1));
+					}
+					System.out.println("最初のqArray");
+					for (String s : qArray) {
+						System.out.println(s);
+					}
+					// いったん<s:....>を抜き出す。
+					Pattern p_s = Pattern.compile("<s:(.+?)>");
+					Matcher m_s = p_s.matcher(str);
+					while (m_s.find()) {
+						selectItems = m_s.group(1);
+						System.out.println("selectItems:" + selectItems);
+						selectItemArray = selectItems.split(",");
+						// codeArea.appendText("selectitems:"+selectItems+"\n");
+						String oldStr = m_s.group();
+						System.out.println("old:" + oldStr);
+						str = str.replace(oldStr, "");
+					}
+					// 確認
+					System.out.println("str:");
+					System.out.println(str);
+					System.out.println("s の中身");
+					// 正解文字列が入っている List qArrayにダミーをくっつける。
+					for (String s : selectItemArray) {
 						qArray.add(s);
+						System.out.println(s);
 					}
-					//qArray.add(m_d.group(1));
-				}
-				System.out.println("qArray:");
-				for(String s : qArray) {
-					System.out.println(s);
-				}
-				// いったん<s:....>を抜き出す。
-				Pattern p_s = Pattern.compile("<s:(.+?)>");
-				Matcher m_s = p_s.matcher(str);
-				while (m_s.find()) {
-					selectItems = m_s.group(1);
-					// System.out.println("selectItems:"+selectItems);
-					selectItemArray = selectItems.split(",");
-					// codeArea.appendText("selectitems:"+selectItems+"\n");
-					String oldStr = m_s.group();
-					str = str.replace(oldStr, "");
-				}
-				// 確認
-//						for (String s : selectItemArray) {
-//							System.out.println(s);
-//						}
-				// System.out.println("消去後:" + str);
-				// selectItemArray をシャッフル
-				List<String> tmpList = new ArrayList<String>(Arrays.asList(selectItemArray));
-				Collections.shuffle(tmpList);
-				selectItemArray = tmpList.toArray(new String[tmpList.size()]);
-//						for (String s : selectItemArray) {
-//							System.out.println(s);
-//						}
-				// <q:...>の処理
-				String regex2 = "<q:(.+?)>";
-				Pattern p2 = Pattern.compile(regex2);
-				Matcher m2 = p2.matcher(str);
-				while (m2.find()) {
-					String oldStr = m2.group();
-					String ans = m2.group(1);
-					int index = 0;
-					for (int i = 0; i < selectItemArray.length; i++) {
-						if (ans.equals(selectItemArray[i]))
-							index = (i + 1);
+					System.out.println("qArrayの中身");
+					for (String s : qArray) {
+						System.out.println(s);
 					}
-					String newStr = "{1:NM:=" + index + "}";
-					str = str.replace(oldStr, newStr);
-				}
-				// System.out.println("変換後:" + str);
-				target = target.replace(originalStr, str);
-				// System.out.println("q: 変換後: " + target);
-				// codeArea.appendText(target);
-			} // end of while(m.find()) :小問ごとの処理
+					// ここまでで qArray には正解とダミーが入っている。
+					// System.out.println("消去後:" + str);
+					// selectItemArray をシャッフル
+					List<String> tmpList = new ArrayList<String>(qArray);
+					Collections.shuffle(tmpList);
+					selectItemArray = tmpList.toArray(new String[tmpList.size()]);
+					System.out.println("selectItemArray:");
+					for (String s : selectItemArray) {
+						System.out.println(s);
+					}
+					// <q:...>の処理
+					String regex2 = "<q:(.+?)>";
+					Pattern p2 = Pattern.compile(regex2);
+					Matcher m2 = p2.matcher(str);
+					while (m2.find()) {
+						String oldStr = m2.group();
+						String ans = m2.group(1);
+						int index = 0;
+						for (int i = 0; i < selectItemArray.length; i++) {
+							if (ans.equals(selectItemArray[i]))
+								index = (i + 1);
+						}
+						String newStr = "{1:NM:=" + index + "}";
+						str = str.replace(oldStr, newStr);
+					}
+					// System.out.println("変換後:" + str);
+					target = target.replace(originalStr, str);
+					// System.out.println("q: 変換後: " + target);
+					// codeArea.appendText(target);
+				} // end of while(m.find()) :小問ごとの処理
+			} // end if(<s:...>がある場合。
 			codeArea.appendText(target);
 			// <s:....>を<table>にする。
 			if (tableFlag) {
@@ -439,33 +447,33 @@ public class PrimaryController {
 
 	private void tableToNum() {
 		// <Q> </Q> で問題ごとに区切られていることを前提
-		//System.out.println("in tableToNum()");
+		// System.out.println("in tableToNum()");
 		String doc = srcArea.getText();
-		//1行ごとの変換処理
+		// 1行ごとの変換処理
 		String[] line = doc.split("\n");
 		doc = "";
-		for(String r:line) {
+		for (String r : line) {
 			r = r.trim();
-			if(!(r.contentEquals("<Q>")|| r.contentEquals("</Q>"))) {
+			if (!(r.contentEquals("<Q>") || r.contentEquals("</Q>"))) {
 				String[] contents = r.split("\t");
-				for(String c:contents) {//qからはじまるものを<qn:に変換
-					//System.out.println("contents="+c);
+				for (String c : contents) {// qからはじまるものを<qn:に変換
+					// System.out.println("contents="+c);
 					String newStr = "";
-					if(c.startsWith("q")) {
-						newStr =c.replace("q", "<qn:");
-						newStr = newStr +">";
-						r=r.replace(c,newStr);
+					if (c.startsWith("q")) {
+						newStr = c.replace("q", "<qn:");
+						newStr = newStr + ">";
+						r = r.replace(c, newStr);
 					}
 				}
-				r="<tr><td>"+r;
-				r=r.replace("\t", "</td><td>");
-				r=r+"</td></tr>";
+				r = "<tr><td>" + r;
+				r = r.replace("\t", "</td><td>");
+				r = r + "</td></tr>";
 			}
-			//System.out.println(r);
-			doc = doc+r;
+			// System.out.println(r);
+			doc = doc + r;
 		}
-		//System.out.println(doc);
-		
+		// System.out.println(doc);
+
 		List<String> quizList = new ArrayList<String>();
 		String regex = "<Q>(.+?)</Q>";
 		Pattern p = Pattern.compile(regex);
@@ -483,31 +491,31 @@ public class PrimaryController {
 			m = p.matcher(target);
 			while (m.find()) {
 				String str = m.group();
-				//System.out.println(str);
-				//String newStr = "{1:NM:=" + m.group(1) + "}";
+				// System.out.println(str);
+				// String newStr = "{1:NM:=" + m.group(1) + "}";
 				String newStr = "{1:SA:=" + m.group(1) + "}";
 				target = target.replace(str, newStr);
 			}
-			//System.out.println("qn変換後：" + target);
+			// System.out.println("qn変換後：" + target);
 			codeArea.appendText(target + "\n");
 		}
 	}
 
 	// 文字コードチェック
-		private String detectEncoding(File file) throws IOException {
-			String result = null;
-			byte[] buf = new byte[4096];
-			FileInputStream fis = new FileInputStream(file);
-			UniversalDetector detector = new UniversalDetector(null);
-			int nread;
-			while ((nread = fis.read(buf)) > 0 && !detector.isDone()) {
-				detector.handleData(buf, 0, nread);
-			}
-			detector.dataEnd();
-			result = detector.getDetectedCharset();
-			detector.reset();
-			fis.close();
-			return result;
-
+	private String detectEncoding(File file) throws IOException {
+		String result = null;
+		byte[] buf = new byte[4096];
+		FileInputStream fis = new FileInputStream(file);
+		UniversalDetector detector = new UniversalDetector(null);
+		int nread;
+		while ((nread = fis.read(buf)) > 0 && !detector.isDone()) {
+			detector.handleData(buf, 0, nread);
 		}
+		detector.dataEnd();
+		result = detector.getDetectedCharset();
+		detector.reset();
+		fis.close();
+		return result;
+
+	}
 }
