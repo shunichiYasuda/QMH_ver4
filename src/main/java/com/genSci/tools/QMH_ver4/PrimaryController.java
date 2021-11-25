@@ -180,7 +180,7 @@ public class PrimaryController {
 		// codeArea.appendText(doc);
 		List<String> quizList = new ArrayList<String>();
 		String regex = "<Q>(.+?)</Q>";
-		// regex = "(.+?)<s:.+?>";
+		// regex = "(.+?)<d:.+?>";
 		Pattern p = Pattern.compile(regex);
 		Matcher m = p.matcher(doc);
 		while (m.find()) {
@@ -325,30 +325,30 @@ public class PrimaryController {
 		}
 		// <p></p>で囲まれた問題ごとに処理する。
 		for (String target : quizList) {
-			// <s:...> までの小問に分割する。ただし、<s:...> に書かれているのはダミー選択肢であるから空白もあり得る。
-			// <s:....>までの <q: ...>を処理したい
-			regex = "(.+?)<s:.+?>";
+			// <d:...> までの小問に分割する。ただし、<d:...> に書かれているのはダミー選択肢であるから空白もあり得る。
+			// <d:....>までの <q: ...>を処理したい
+			regex = "(.+?)<d:.+?>";
 			p = Pattern.compile(regex);
 			m = p.matcher(target);
 			String selectItems = null;
 			String[] selectItemArray = null;
-			// 数値問題入力において<s:...>が存在したら、それは「選択肢から番号を選んで入力」を意味する。
+			// 数値問題入力において<d:...>が存在したら、それは「選択肢から番号を選んで入力」を意味する。
 			// そのときは<table>をつくるのでフラグが必要
 			boolean tableFlag = false;
 			boolean sFlag = false;
 			if (m.find()) {
-				System.out.println("<s:...>がある");
+				System.out.println("<d:...>がある");
 				sFlag = true;
 			} else {
-				System.out.println("<s:...>がない");
+				System.out.println("<d:...>がない");
 			}
 			if (sFlag) {
 				m = p.matcher(target);
-				while (m.find()) { // <s:...>で終わる小問ごとの処理
-					// ここへ来たと言うことは<s:...>があったということ
+				while (m.find()) { // <d:...>で終わる小問ごとの処理
+					// ここへ来たと言うことは<d:...>があったということ
 					tableFlag = true;
 					String str = m.group();
-					// str は<s:...>までの文字列
+					// str は<d:...>までの文字列
 					String originalStr = new String(str);
 					System.out.println("最初のstr");
 					System.out.println(str);
@@ -363,8 +363,8 @@ public class PrimaryController {
 					for (String s : qArray) {
 						System.out.println(s);
 					}
-					// いったん<s:....>を抜き出す。
-					Pattern p_s = Pattern.compile("<s:(.+?)>");
+					// いったん<d:....>を抜き出す。
+					Pattern p_s = Pattern.compile("<d:(.+?)>");
 					Matcher m_s = p_s.matcher(str);
 					while (m_s.find()) {
 						selectItems = m_s.group(1);
@@ -405,6 +405,7 @@ public class PrimaryController {
 					while (m2.find()) {
 						String oldStr = m2.group();
 						String ans = m2.group(1);
+						//System.out.println("oldStr"+oldStr+"\tans"+ans);
 						int index = 0;
 						for (int i = 0; i < selectItemArray.length; i++) {
 							if (ans.equals(selectItemArray[i]))
@@ -416,11 +417,74 @@ public class PrimaryController {
 					// System.out.println("変換後:" + str);
 					target = target.replace(originalStr, str);
 					// System.out.println("q: 変換後: " + target);
-					// codeArea.appendText(target);
+					codeArea.appendText(target);
 				} // end of while(m.find()) :小問ごとの処理
-			} // end if(<s:...>がある場合。
-			codeArea.appendText(target);
-			// <s:....>を<table>にする。
+			} else{ // end if(<d:...>がある場合。
+				//<d:....>がない場合の処理。
+				List<String> qArray = new ArrayList<String>();
+				Pattern p_q = Pattern.compile("<q:(.+?)>");
+				Matcher m_q = p_q.matcher(target);
+				while (m_q.find()) {
+					qArray.add(m_q.group(1));
+				}
+				//
+				List<String> tmpList = new ArrayList<String>(qArray);
+				Collections.shuffle(tmpList);
+				selectItemArray = tmpList.toArray(new String[tmpList.size()]);
+				//
+				System.out.println("selectItemArray");
+				for(String s: selectItemArray) {
+					System.out.println(s);
+				}
+				
+				//
+				// <q:...>の処理
+				String regex2 = "<q:(.+?)>";
+				Pattern p2 = Pattern.compile(regex2);
+				Matcher m2 = p2.matcher(target);
+				while (m2.find()) {
+					String oldStr = m2.group();
+					String ans = m2.group(1);
+					//System.out.println("oldStr"+oldStr+"\tans"+ans);
+					int index = 0;
+					for (int i = 0; i < selectItemArray.length; i++) {
+						if (ans.equals(selectItemArray[i])) {
+							index = (i + 1);
+							System.out.println("index:"+index);
+						}
+					}
+					String newStr = "{1:NM:=" + index + "}";
+					System.out.println(target);
+					target = target.replace(oldStr, newStr);
+					System.out.println(target);
+				}
+				codeArea.appendText(target);
+//				System.out.println("最初のqArray");
+//				for (String s : qArray) {
+//					System.out.println(s);
+//				}
+				String tableStr = "<table>\n<caption><b>選択肢</b></caption>\n";
+				// 選択肢の数
+				int num = qArray.size();
+				int index = 0;
+				tableStr += ("<tr>");
+				while (index < num) {
+					tableStr += "<td>" + (index + 1) + ". " + selectItemArray[index] + "</td>";
+					if (((index + 1) % 5) == 0) {
+						tableStr += ("</tr>\n");
+						tableStr += ("<tr>");
+					}
+					if (index == num - 1) {
+						tableStr += ("</tr>\n");
+					}
+					index++;
+				}
+				tableStr += ("</table>\n");
+				// System.out.println(tableStr);
+				codeArea.appendText(tableStr);
+			}
+			
+			// <d:....>を<table>にする。
 			if (tableFlag) {
 				String tableStr = "<table>\n<caption><b>選択肢</b></caption>\n";
 				// 選択肢の数
