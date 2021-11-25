@@ -337,10 +337,10 @@ public class PrimaryController {
 			boolean tableFlag = false;
 			boolean sFlag = false;
 			if (m.find()) {
-				System.out.println("<d:...>がある");
+				//System.out.println("<d:...>がある");
 				sFlag = true;
 			} else {
-				System.out.println("<d:...>がない");
+				//System.out.println("<d:...>がない");
 			}
 			if (sFlag) {
 				m = p.matcher(target);
@@ -350,8 +350,8 @@ public class PrimaryController {
 					String str = m.group();
 					// str は<d:...>までの文字列
 					String originalStr = new String(str);
-					System.out.println("最初のstr");
-					System.out.println(str);
+//					System.out.println("最初のstr");
+//					System.out.println(str);
 					// 実験。<q:...>を取り出して配列にしまい込む。
 					List<String> qArray = new ArrayList<String>();
 					Pattern p_q = Pattern.compile("<q:(.+?)>");
@@ -359,45 +359,45 @@ public class PrimaryController {
 					while (m_q.find()) {
 						qArray.add(m_q.group(1));
 					}
-					System.out.println("最初のqArray");
-					for (String s : qArray) {
-						System.out.println(s);
-					}
+//					System.out.println("最初のqArray");
+//					for (String s : qArray) {
+//						System.out.println(s);
+//					}
 					// いったん<d:....>を抜き出す。
 					Pattern p_s = Pattern.compile("<d:(.+?)>");
 					Matcher m_s = p_s.matcher(str);
 					while (m_s.find()) {
 						selectItems = m_s.group(1);
-						System.out.println("selectItems:" + selectItems);
+						//System.out.println("selectItems:" + selectItems);
 						selectItemArray = selectItems.split(",");
 						// codeArea.appendText("selectitems:"+selectItems+"\n");
 						String oldStr = m_s.group();
-						System.out.println("old:" + oldStr);
+						//System.out.println("old:" + oldStr);
 						str = str.replace(oldStr, "");
 					}
 					// 確認
-					System.out.println("str:");
-					System.out.println(str);
-					System.out.println("s の中身");
+//					System.out.println("str:");
+//					System.out.println(str);
+//					System.out.println("s の中身");
 					// 正解文字列が入っている List qArrayにダミーをくっつける。
 					for (String s : selectItemArray) {
 						qArray.add(s);
-						System.out.println(s);
+						//System.out.println(s);
 					}
-					System.out.println("qArrayの中身");
-					for (String s : qArray) {
-						System.out.println(s);
-					}
+//					System.out.println("qArrayの中身");
+//					for (String s : qArray) {
+//						System.out.println(s);
+//					}
 					// ここまでで qArray には正解とダミーが入っている。
 					// System.out.println("消去後:" + str);
 					// selectItemArray をシャッフル
 					List<String> tmpList = new ArrayList<String>(qArray);
 					Collections.shuffle(tmpList);
 					selectItemArray = tmpList.toArray(new String[tmpList.size()]);
-					System.out.println("selectItemArray:");
-					for (String s : selectItemArray) {
-						System.out.println(s);
-					}
+//					System.out.println("selectItemArray:");
+//					for (String s : selectItemArray) {
+//						System.out.println(s);
+//					}
 					// <q:...>の処理
 					String regex2 = "<q:(.+?)>";
 					Pattern p2 = Pattern.compile(regex2);
@@ -432,10 +432,10 @@ public class PrimaryController {
 				Collections.shuffle(tmpList);
 				selectItemArray = tmpList.toArray(new String[tmpList.size()]);
 				//
-				System.out.println("selectItemArray");
-				for(String s: selectItemArray) {
-					System.out.println(s);
-				}
+//				System.out.println("selectItemArray");
+//				for(String s: selectItemArray) {
+//					System.out.println(s);
+//				}
 				
 				//
 				// <q:...>の処理
@@ -450,13 +450,13 @@ public class PrimaryController {
 					for (int i = 0; i < selectItemArray.length; i++) {
 						if (ans.equals(selectItemArray[i])) {
 							index = (i + 1);
-							System.out.println("index:"+index);
+							//System.out.println("index:"+index);
 						}
 					}
 					String newStr = "{1:NM:=" + index + "}";
-					System.out.println(target);
+					//System.out.println(target);
 					target = target.replace(oldStr, newStr);
-					System.out.println(target);
+					//System.out.println(target);
 				}
 				codeArea.appendText(target);
 //				System.out.println("最初のqArray");
