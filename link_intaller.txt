@@ -1,0 +1,3 @@
+jlink --module-path "c:\java\javafx-jmods-17.0.1" --add-modules javafx.base,javafx.fxml,javafx.controls,javafx.graphics --compress=2 --output "target\jre"
+
+jpackage --type "app-image" --name "QMH_ver4" --input "target" --main-class com.genSci.tools.QMH_ver4.App --main-jar "QMH_ver4-0.0.1-SNAPSHOT.jar" --runtime-image "target\jre" --vendor "Yasuda International" --temp "temp-app-image" --icon "iconQMH_ver4.ico" --app-version "4.0"  --dest "installer"
